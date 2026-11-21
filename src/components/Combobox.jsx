@@ -88,17 +88,17 @@ export function SelectCombobox({
         tabIndex={0}
         onClick={() => setOpen(!open)}
         onKeyDown={handleKeyDown}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        className="w-full px-3 py-2 border-2 border-neutral-700 hover:border-neutral-500 rounded-xl text-sm bg-black/95 text-amber-300 font-mono cursor-pointer flex items-center justify-between focus:border-amber-400 focus:outline-none shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]"
       >
-        <span className={value ? "text-gray-900" : "text-gray-400"}>
+        <span className={value ? "text-amber-200 font-bold" : "text-neutral-500"}>
           {value ? formatOption(value) : placeholder}
         </span>
-        <span className="text-gray-400 text-xs">▼</span>
+        <span className="text-amber-400 text-xs">▼</span>
       </div>
 
       {open && (
-        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden flex flex-col">
-          <div className="p-2 border-b border-gray-100">
+        <div className="absolute z-30 mt-1 w-full bg-neutral-950/95 backdrop-blur-md border-2 border-amber-500/70 rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.95)] max-h-60 overflow-hidden flex flex-col font-mono">
+          <div className="p-2 border-b border-neutral-800 bg-black">
             <input
               type="text"
               autoFocus
@@ -109,24 +109,24 @@ export function SelectCombobox({
               }}
               onKeyDown={handleKeyDown}
               placeholder="Filter..."
-              className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2.5 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-amber-200 placeholder-neutral-600 focus:outline-none focus:border-amber-400"
             />
           </div>
-          <div ref={listRef} className="overflow-y-auto max-h-48 p-1">
+          <div ref={listRef} className="overflow-y-auto max-h-48 p-1 divide-y divide-neutral-900">
             {filtered.length === 0 ? (
-              <p className="p-2 text-xs text-gray-400 text-center">No options found</p>
+              <p className="p-2 text-xs text-neutral-500 text-center">No options found</p>
             ) : (
               filtered.map((opt, i) => (
                 <button
                   key={opt}
                   type="button"
                   onClick={() => selectItem(opt)}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded ${
+                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg transition ${
                     i === highlightIdx
-                      ? "bg-blue-600 text-white"
+                      ? "bg-amber-400 text-neutral-950 font-black"
                       : opt === value
-                      ? "bg-blue-50 text-blue-700 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-amber-950/60 text-amber-300 font-bold"
+                      : "text-neutral-300 hover:bg-neutral-900"
                   }`}
                 >
                   {formatOption(opt)}
@@ -252,40 +252,43 @@ export function TrainSuggestInput({ value, onChange, onTrain, inputClassName }) 
       />
 
       {showDropdown && (
-        <div className="absolute z-30 mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100">
-          {suggestions.map((train, idx) => (
-            <button
-              key={train["Train No"]}
-              type="button"
-              onClick={() => handleSelect(train)}
-              className={`w-full text-left p-3 text-sm transition ${
-                idx === highlightIdx ? "bg-blue-600 text-white" : "hover:bg-blue-50/70 text-gray-800"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-sm">
-                  {train["Train No"]} — {train["Train Name"]}
-                </span>
-                <span
-                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                    idx === highlightIdx
-                      ? "bg-blue-800 text-white"
-                      : "bg-blue-50 text-blue-700"
-                  }`}
-                >
-                  {train["Train Type"]}
-                </span>
-              </div>
-              <div className={`text-xs mt-1 font-medium ${idx === highlightIdx ? "text-blue-100" : "text-gray-600"}`}>
-                {train.FROM} ➔ {train.TO}
-              </div>
-              {train.description && (
-                <p className={`text-[11px] mt-1 line-clamp-1 ${idx === highlightIdx ? "text-blue-200" : "text-gray-400"}`}>
-                  {train.description}
-                </p>
-              )}
-            </button>
-          ))}
+        <div className="absolute z-30 mt-1.5 w-full bg-neutral-950/95 backdrop-blur-md border-2 border-amber-500/70 rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.95)] max-h-72 overflow-y-auto divide-y divide-neutral-800">
+          {suggestions.map((train, idx) => {
+            const isSelected = idx === highlightIdx;
+            return (
+              <button
+                key={train["Train No"]}
+                type="button"
+                onClick={() => handleSelect(train)}
+                className={`w-full text-left p-3 text-sm transition ${
+                  isSelected ? "bg-amber-400 text-neutral-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.5)]" : "hover:bg-neutral-900 text-amber-200"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`font-mono font-bold text-sm ${isSelected ? "text-neutral-950" : "text-amber-300"}`}>
+                    {train["Train No"]} — {train["Train Name"]}
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                      isSelected
+                        ? "bg-neutral-950 text-amber-300"
+                        : "bg-amber-950/80 text-amber-300 border border-amber-500/50"
+                    }`}
+                  >
+                    {train["Train Type"]}
+                  </span>
+                </div>
+                <div className={`text-xs mt-1 font-mono ${isSelected ? "text-neutral-900 font-bold" : "text-neutral-400"}`}>
+                  {train.FROM} ➔ {train.TO}
+                </div>
+                {train.description && (
+                  <p className={`text-[11px] mt-1 line-clamp-1 ${isSelected ? "text-neutral-800" : "text-neutral-500"}`}>
+                    {train.description}
+                  </p>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -311,22 +314,27 @@ export function ViaStationsInput({ value = [], onChange, stations = [], idPrefix
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {value.map((v, i) => (
-        <div key={i} className="flex gap-2">
-          <input
-            id={`${idPrefix}-${i}`}
-            list={datalistId}
-            value={v}
-            onChange={(e) => handleUpdate(i, e.target.value)}
-            placeholder={`Via station ${i + 1}`}
-            className="flex-1 min-w-0 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
+        <div key={i} className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-[11px] text-amber-500/70 font-bold select-none pointer-events-none">
+              #{String(i + 1).padStart(2, "0")}
+            </span>
+            <input
+              id={`${idPrefix}-${i}`}
+              list={datalistId}
+              value={v}
+              onChange={(e) => handleUpdate(i, e.target.value)}
+              placeholder={`Enter via station ${i + 1} (e.g. Vijayawada, Warangal)`}
+              className="w-full pl-11 pr-4 py-2.5 bg-black/95 border-2 border-neutral-700 hover:border-neutral-500 focus:border-amber-400 rounded-xl text-sm font-mono font-bold text-amber-200 placeholder-neutral-600 focus:outline-none focus:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]"
+            />
+          </div>
           <button
             type="button"
             onClick={() => handleRemove(i)}
-            className="px-2 text-gray-400 hover:text-red-600 transition"
-            title="Remove"
+            className="p-2.5 bg-neutral-900/90 hover:bg-red-950/80 text-neutral-400 hover:text-red-400 border border-neutral-700 hover:border-red-500 rounded-xl transition flex items-center justify-center shrink-0 shadow-sm"
+            title="Remove station"
           >
             <X size={16} />
           </button>
@@ -343,9 +351,10 @@ export function ViaStationsInput({ value = [], onChange, stations = [], idPrefix
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex items-center gap-1 text-xs text-blue-600 font-medium hover:underline pt-1"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold transition shadow-[0_0_12px_rgba(245,158,11,0.15)] mt-1"
         >
-          <Plus size={14} /> Add via station
+          <Plus size={14} className="text-amber-400" />
+          <span>+ ADD VIA STATION</span>
         </button>
       )}
     </div>
