@@ -55,6 +55,7 @@ export default function RailwayGenerator() {
   const [searchFilter, setSearchFilter] = useState("");
   const [clockTime, setClockTime] = useState("");
   const audioRef = useRef(null);
+  const playerSectionRef = useRef(null);
 
   // Sync when visitors edit or add trains in the fleet database
   useEffect(() => {
@@ -121,6 +122,7 @@ export default function RailwayGenerator() {
     if (audioUrl && audioRef.current) {
       audioRef.current.load();
       audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
+      playerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [audioUrl]);
 
@@ -157,37 +159,31 @@ export default function RailwayGenerator() {
     });
   }, [fleetList, searchFilter, categoryFilter]);
 
-  const handleSelectTrain = (t) => {
-    setTrainNumber(t["Train No"]);
-    setTrainData(t);
-    if (Array.isArray(t.VIA)) setViaStations(t.VIA);
-    setAudioUrl(null);
-    setError(null);
-  };
+  const executeBroadcast = async (customTrainNo, customTrainData) => {
+    const targetNo = String(customTrainNo || trainNumber || "").trim();
+    const targetData = customTrainData || trainData;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     setLoading(true);
     setError(null);
     setAudioUrl(null);
     setWarnings([]);
 
-    if (!trainNumber || (needsPlatform && !platformNumber) || (needsDelay && !delayHours && !delayMinutes) || (needsExpectedTime && !expectedTime)) {
+    if (!targetNo || (needsPlatform && !platformNumber) || (needsDelay && !delayHours && !delayMinutes) || (needsExpectedTime && !expectedTime)) {
       setError("Please fill in all required station fields.");
       setLoading(false);
       return;
     }
 
-    // Resolve audio train number to ensure genuine human voice broadcast
-    const audioTrainNo = resolveAudioTrainNumber(trainNumber.trim());
+    // Resolve audio train number - always prefers the train's own verified recording
+    const audioTrainNo = resolveAudioTrainNumber(targetNo);
 
     const payload = {
       trainNumber: audioTrainNo,
       anncType,
-      ...(trainData || announceVia) && { via: announceVia ? cleanViaStations(viaStations) : [] },
-      ...needsPlatform && { platformNumber },
-      ...needsDelay && { delayHours: Number(delayHours || 0), delayMinutes: Number(delayMinutes || 0) },
-      ...needsExpectedTime && { expectedTime }
+      ...((targetData || announceVia) && { via: announceVia ? cleanViaStations(viaStations) : [] }),
+      ...(needsPlatform && { platformNumber }),
+      ...(needsDelay && { delayHours: Number(delayHours || 0), delayMinutes: Number(delayMinutes || 0) }),
+      ...(needsExpectedTime && { expectedTime })
     };
 
     try {
@@ -208,7 +204,8 @@ export default function RailwayGenerator() {
 
       const data = await res.json();
       if (data.audioUrl) {
-        setAudioUrl(`${RAILWAY_URL}${data.audioUrl}`);
+        const fullUrl = `${RAILWAY_URL}${data.audioUrl}`;
+        setAudioUrl(fullUrl);
         if (data.warnings?.length) {
           setWarnings(data.warnings);
         }
@@ -219,6 +216,22 @@ export default function RailwayGenerator() {
       setError(err.message || "Failed to generate announcement.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e?.preventDefault?.();
+    executeBroadcast();
+  };
+
+  const handleSelectTrain = (t, autoBroadcast = true) => {
+    const no = String(t["Train No"]);
+    setTrainNumber(no);
+    setTrainData(t);
+    if (Array.isArray(t.VIA)) setViaStations(t.VIA);
+    setError(null);
+    if (autoBroadcast) {
+      executeBroadcast(no, t);
     }
   };
 
@@ -442,9 +455,9 @@ export default function RailwayGenerator() {
                     setAudioUrl(null);
                   }}
                   onTrain={(t) => {
-                    setTrainData(t);
-                    if (t?.VIA?.length) setViaStations(t.VIA);
-                    setAudioUrl(null);
+                    if (t) {
+                      handleSelectTrain(t, true);
+                    }
                   }}
                   inputClassName="w-full px-4 py-3 bg-transparent border-0 text-amber-300 font-mono text-base placeholder-neutral-600 focus:outline-none tracking-wider font-extrabold"
                 />
@@ -454,11 +467,12 @@ export default function RailwayGenerator() {
               <div className="space-y-2 pt-1">
                 <div className="text-[11px] font-mono uppercase tracking-wider text-amber-300 font-bold flex items-center gap-1.5">
                   <Radio size={13} className="text-amber-400 animate-pulse" />
-                  <span>Fast Access Fleets (Click to Load Parameters):</span>
+                  <span>Fast Access Fleets (Press Any Train to Broadcast Instantly):</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                   {QUICK_FLEET.map((f) => {
                     const isSelected = trainNumber === f.no;
+                    const isBroadcastingThis = isSelected && loading;
                     return (
                       <button
                         key={f.no}
@@ -466,13 +480,13 @@ export default function RailwayGenerator() {
                         onClick={() => {
                           const t = fleetList.find((tr) => String(tr["Train No"]) === String(f.no));
                           if (t) {
-                            handleSelectTrain(t);
+                            handleSelectTrain(t, true);
                           } else {
                             setTrainNumber(f.no);
-                            setAudioUrl(null);
+                            executeBroadcast(f.no, null);
                           }
                         }}
-                        className={`p-2.5 rounded-xl border-2 font-mono text-xs transition text-left flex flex-col justify-between ${
+                        className={`p-2.5 rounded-xl border-2 font-mono text-xs transition text-left flex flex-col justify-between cursor-pointer ${
                           isSelected
                             ? "bg-amber-400 text-neutral-950 border-amber-300 font-black shadow-[0_0_20px_rgba(245,158,11,0.6)] ring-2 ring-amber-300 scale-[1.02]"
                             : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:border-amber-500 hover:bg-neutral-800"
@@ -480,14 +494,32 @@ export default function RailwayGenerator() {
                       >
                         <div className="flex items-center justify-between">
                           <span className={`font-black ${isSelected ? "text-neutral-950" : "text-amber-400"}`}>{f.no}</span>
-                          {isSelected && <span className="w-2 h-2 rounded-full bg-neutral-950 animate-ping" />}
+                          {isBroadcastingThis ? (
+                            <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                          ) : isSelected ? (
+                            <span className="w-2 h-2 rounded-full bg-neutral-950" />
+                          ) : null}
                         </div>
                         <div className={`truncate text-[11px] font-bold mt-1 ${isSelected ? "text-neutral-950" : "text-white"}`}>{f.name}</div>
+                        <div className={`text-[9px] mt-1 font-bold ${isSelected ? "text-neutral-900" : "text-amber-400/80"}`}>
+                          {isBroadcastingThis ? "BROADCASTING..." : "▶ BROADCAST"}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
+
+              {/* Active Broadcast Transmission Indicator */}
+              {loading && (
+                <div className="p-3.5 bg-amber-950/90 border-2 border-amber-400 rounded-2xl flex items-center justify-between text-xs font-mono text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.4)] animate-pulse">
+                  <div className="flex items-center gap-2.5 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                    <span>TRANSMITTING BROADCAST FOR TRAIN {trainNumber} &bull; {trainData?.["Train Name"] || "Express"}...</span>
+                  </div>
+                  <span className="text-[10px] bg-amber-400 text-neutral-950 px-2 py-0.5 rounded font-black uppercase">Live Dispatch</span>
+                </div>
+              )}
             </div>
 
             {/* SECTION 2: ANNOUNCEMENT SITUATION (ILLUMINATED HARDWARE SWITCHES) */}
@@ -709,7 +741,7 @@ export default function RailwayGenerator() {
             )}
 
             {audioUrl && !loading && (
-              <div className="p-6 bg-black/95 border-3 border-amber-400 rounded-2xl space-y-4 font-mono shadow-[0_0_35px_rgba(245,158,11,0.5)]">
+              <div ref={playerSectionRef} className="p-6 bg-black/95 border-3 border-amber-400 rounded-2xl space-y-4 font-mono shadow-[0_0_35px_rgba(245,158,11,0.5)]">
                 {/* Simulated VU Meter Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-neutral-800 pb-3 text-xs">
                   <div className="flex items-center gap-2.5">
@@ -809,15 +841,16 @@ export default function RailwayGenerator() {
             <div className="max-h-72 overflow-y-auto p-2.5 bg-black/90 border-2 border-neutral-800 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {availableFleetTrains.map((t) => {
                 const isSelected = trainNumber === t["Train No"];
+                const isBroadcastingThis = isSelected && loading;
                 return (
                   <button
                     key={t["Train No"]}
                     type="button"
-                    onClick={() => handleSelectTrain(t)}
-                    className={`p-3.5 rounded-xl text-left border-2 transition text-xs flex flex-col justify-between ${
+                    onClick={() => handleSelectTrain(t, true)}
+                    className={`p-3.5 rounded-xl text-left border-2 transition text-xs flex flex-col justify-between cursor-pointer ${
                       isSelected
                         ? "bg-amber-950/80 border-amber-400 text-white font-bold ring-2 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
-                        : "bg-neutral-900/90 border-neutral-800 hover:border-neutral-600 text-neutral-300"
+                        : "bg-neutral-900/90 border-neutral-800 hover:border-amber-500/70 hover:bg-neutral-800 text-neutral-300"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -827,6 +860,12 @@ export default function RailwayGenerator() {
                     <div className="truncate font-black text-white mt-1 text-sm">{t["Train Name"]}</div>
                     <div className="text-[11px] text-neutral-400 truncate mt-1">
                       {t.FROM} ➔ {t.TO}
+                    </div>
+                    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-neutral-800/80 text-[10px] font-mono">
+                      <span className={isSelected ? "text-amber-300 font-bold" : "text-neutral-500"}>
+                        {isBroadcastingThis ? "BROADCASTING LIVE..." : "▶ PRESS TO ANNOUNCE"}
+                      </span>
+                      {isSelected && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />}
                     </div>
                   </button>
                 );

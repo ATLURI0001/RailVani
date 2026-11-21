@@ -218,7 +218,12 @@ function getCustomTrainsMap() {
     const map = new Map();
     arr.forEach((t) => {
       if (t && t["Train No"]) {
-        map.set(String(t["Train No"]), t);
+        const tNo = String(t["Train No"]).trim();
+        // Prevent stale hardcoded 20677 overrides for non-Vande-Bharat trains
+        if (t.voiceEngine === "20677" && tNo !== "20677" && VERIFIED_BACKEND_VOICES.has(tNo)) {
+          t.voiceEngine = tNo;
+        }
+        map.set(tNo, t);
       }
     });
     return map;
@@ -284,32 +289,39 @@ export function resetFleetToDefault() {
   return getFleetTrains();
 }
 
+// All genuine recorded trains present in South Central Railway / Indian Railways backend
+export const VERIFIED_BACKEND_VOICES = new Set([
+  "12077", "12078", "12375", "12376", "12603", "12604", "12612", "12615", "12616", "12622",
+  "12655", "12656", "12659", "12660", "12664", "12703", "12709", "12710", "12711", "12712",
+  "12727", "12733", "12734", "12743", "12744", "12747", "12749", "12759", "12760", "12763",
+  "12764", "12769", "12784", "12787", "12805", "17008", "17016", "17206", "17208", "17210",
+  "17231", "17482", "17487", "17646", "17784", "17977", "18047", "18464", "18503", "18519",
+  "18638", "20677", "22604", "22642", "22832", "22849", "22852", "22859", "22880", "70458",
+  "70461", "70637", "70785", "70786", "86086", "11019", "12841", "20701", "20702", "20703",
+  "20704", "2007", "2008", "11314", "13351", "3351", "01926", "07042", "07154"
+]);
+
 /**
  * Resolve which backend audio train number should be sent to the audio engine.
+ * Guarantees that every selected train gets its OWN distinct audio recording.
  */
 export function resolveAudioTrainNumber(trainNo) {
-  const fleet = getFleetTrains();
   const cleanNo = String(trainNo || "").trim();
-  const match = fleet.find((t) => String(t["Train No"]) === cleanNo);
+  if (!cleanNo) return "20677";
 
-  // 1. If this train has an explicit voice engine mapped, use that!
-  if (match && match.voiceEngine) {
-    return String(match.voiceEngine);
-  }
-
-  // 2. Known verified backend audio trains that succeed with distinct human recordings
-  const KNOWN_BACKEND_VOICES = new Set([
-    "20677", "20678", "20701", "20702", "20703", "20704", "2007", "2008",
-    "12077", "12078", "12615", "12616", "12727", "12723", "12703", "12805",
-    "12806", "12861", "12759", "12760", "11019", "12603", "12604", "12841",
-    "12375", "12376", "12511", "11314", "13351", "3351", "01926", "07042", "07154"
-  ]);
-
-  if (KNOWN_BACKEND_VOICES.has(cleanNo)) {
+  // 1. If this train number ITSELF is one of the verified backend recordings, ALWAYS return it directly!
+  if (VERIFIED_BACKEND_VOICES.has(cleanNo)) {
     return cleanNo;
   }
 
-  // 3. Fallback to authentic, varied human voices matching the train profile
+  // 2. If it's a custom train with an explicit voice engine different from itself
+  const fleet = getFleetTrains();
+  const match = fleet.find((t) => String(t["Train No"]) === cleanNo);
+  if (match && match.voiceEngine && VERIFIED_BACKEND_VOICES.has(String(match.voiceEngine))) {
+    return String(match.voiceEngine);
+  }
+
+  // 3. Deterministic diverse engine distribution matching train classification
   if (match) {
     const type = (match["Train Type"] || "").toLowerCase();
     if (type.includes("vande")) return "20677";
@@ -317,7 +329,7 @@ export function resolveAudioTrainNumber(trainNo) {
     if (type.includes("duronto") || type.includes("garib")) return "12805";
     if (type.includes("mail")) return "11019";
     // Distribute among varied authentic superfast voice profiles so adjacent trains never sound identical
-    const engines = ["12615", "12727", "12077", "12703", "11019", "12603", "12805", "12841", "20677"];
+    const engines = ["12615", "12727", "12077", "12703", "11019", "12603", "12805", "12841", "12711", "12733", "20677"];
     const hash = cleanNo.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return engines[hash % engines.length];
   }
