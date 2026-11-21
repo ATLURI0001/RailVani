@@ -119,6 +119,7 @@ export default function RailwayGenerator() {
 
   useEffect(() => {
     if (audioUrl && audioRef.current) {
+      audioRef.current.load();
       audioRef.current.play().catch((e) => console.error("Audio playback error:", e));
     }
   }, [audioUrl]);
@@ -436,8 +437,15 @@ export default function RailwayGenerator() {
               <div className="bg-black border-3 border-amber-500/70 rounded-2xl p-1.5 focus-within:border-amber-400 focus-within:shadow-[0_0_20px_rgba(245,158,11,0.5)] transition shadow-[inset_0_0_20px_rgba(0,0,0,0.9)]">
                 <TrainSuggestInput
                   value={trainNumber}
-                  onChange={setTrainNumber}
-                  onTrain={setTrainData}
+                  onChange={(val) => {
+                    setTrainNumber(val);
+                    setAudioUrl(null);
+                  }}
+                  onTrain={(t) => {
+                    setTrainData(t);
+                    if (t?.VIA?.length) setViaStations(t.VIA);
+                    setAudioUrl(null);
+                  }}
                   inputClassName="w-full px-4 py-3 bg-transparent border-0 text-amber-300 font-mono text-base placeholder-neutral-600 focus:outline-none tracking-wider font-extrabold"
                 />
               </div>
@@ -456,9 +464,13 @@ export default function RailwayGenerator() {
                         key={f.no}
                         type="button"
                         onClick={() => {
-                          const t = ALL_INDIAN_TRAINS.find((tr) => tr["Train No"] === f.no);
-                          if (t) handleSelectTrain(t);
-                          else setTrainNumber(f.no);
+                          const t = fleetList.find((tr) => String(tr["Train No"]) === String(f.no));
+                          if (t) {
+                            handleSelectTrain(t);
+                          } else {
+                            setTrainNumber(f.no);
+                            setAudioUrl(null);
+                          }
                         }}
                         className={`p-2.5 rounded-xl border-2 font-mono text-xs transition text-left flex flex-col justify-between ${
                           isSelected
@@ -714,7 +726,22 @@ export default function RailwayGenerator() {
                   </div>
                 </div>
 
-                <audio ref={audioRef} src={audioUrl} controls autoPlay className="w-full rounded-xl" />
+                <audio key={audioUrl} ref={audioRef} src={audioUrl} controls autoPlay className="w-full rounded-xl" />
+
+                <div className="bg-neutral-900/90 border border-neutral-700/80 rounded-xl p-3 text-[11px] font-mono text-neutral-300 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400">BROADCAST TARGET:</span>
+                    <span className="text-amber-300 font-bold">{trainData?.["Train Name"] || `Train ${trainNumber}`} ({trainNumber})</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400">VOICE PROFILE ENGINE:</span>
+                    <span className="text-emerald-400 font-bold">Profile #{resolveAudioTrainNumber(trainNumber)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-400">AUDIO MASTER:</span>
+                    <span className="text-neutral-200 font-mono text-[10px] truncate max-w-[260px]">{audioUrl.split('/').pop()}</span>
+                  </div>
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                   <a
