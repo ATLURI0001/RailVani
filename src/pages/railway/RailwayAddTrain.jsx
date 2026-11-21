@@ -128,7 +128,7 @@ export default function RailwayAddTrain() {
   };
 
   const handleResetFleet = () => {
-    if (window.confirm("Reset entire fleet database to default 183 operational trains? Custom additions will be cleared.")) {
+    if (window.confirm("Reset entire fleet database to default verified operational trains? Custom additions will be cleared.")) {
       resetFleetToDefault();
       setFleetList(getFleetTrains());
       clearForm();
@@ -194,7 +194,7 @@ export default function RailwayAddTrain() {
               type="button"
               onClick={handleResetFleet}
               className="inline-flex items-center gap-1.5 px-3 py-2.5 bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700/80 rounded-xl text-xs font-bold transition"
-              title="Reset fleet database to default 183 trains"
+              title="Reset fleet database to default verified trains"
             >
               <RotateCcw size={14} />
               <span>Reset</span>

@@ -325,9 +325,11 @@ export function ViaStationsInput({ value = [], onChange, stations = [], idPrefix
               id={`${idPrefix}-${i}`}
               list={datalistId}
               value={v}
+              autoComplete="off"
               onChange={(e) => handleUpdate(i, e.target.value)}
               placeholder={`Enter via station ${i + 1} (e.g. Vijayawada, Warangal)`}
-              className="w-full pl-11 pr-4 py-2.5 bg-black/95 border-2 border-neutral-700 hover:border-neutral-500 focus:border-amber-400 rounded-xl text-sm font-mono font-bold text-amber-200 placeholder-neutral-600 focus:outline-none focus:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]"
+              style={{ backgroundColor: "#0a0a0a", color: "#fef3c7" }}
+              className="w-full pl-11 pr-4 py-2.5 bg-neutral-950 border-2 border-neutral-700 hover:border-neutral-500 focus:border-amber-400 rounded-xl text-sm font-mono font-bold text-amber-200 placeholder-neutral-600 focus:outline-none focus:shadow-[0_0_15px_rgba(245,158,11,0.25)] transition shadow-[inset_0_0_12px_rgba(0,0,0,0.8)]"
             />
           </div>
           <button

@@ -18,11 +18,11 @@ const cleanViaStations = (arr) => [...new Set(arr.map((s) => s.trim()).filter(Bo
 
 const QUICK_FLEET = [
   { no: "20677", name: "Vande Bharat Exp", from: "Vijayawada", to: "Chennai" },
-  { no: "12077", name: "Jan Shatabdi Exp", from: "Chennai", to: "Vijayawada" },
+  { no: "12077", name: "Jan Shatabdi Exp", from: "Vijayawada", to: "Chennai" },
   { no: "12615", name: "Grand Trunk Exp", from: "Chennai", to: "New Delhi" },
   { no: "12727", name: "Godavari Exp", from: "Visakhapatnam", to: "Hyderabad" },
-  { no: "11019", name: "Konark Exp", from: "Mumbai", to: "Bhubaneswar" },
-  { no: "12603", name: "Charminar Exp", from: "Chennai", to: "Hyderabad" }
+  { no: "12603", name: "Charminar Exp", from: "Chennai", to: "Hyderabad" },
+  { no: "12805", name: "Janmabhoomi Exp", from: "Lingampalli", to: "Visakhapatnam" }
 ];
 
 const PLATFORMS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
@@ -199,6 +199,9 @@ export default function RailwayGenerator() {
         try {
           errMsg = JSON.parse(text).error || text;
         } catch {}
+        if (res.status === 404 || errMsg.toLowerCase().includes("not found")) {
+          throw new Error(`Train #${targetNo} is not in the archived human voice tapes. Please select any verified train from the fleet below (e.g. 20677 Vande Bharat, 12077 Jan Shatabdi, 12615 Grand Trunk, 12727 Godavari).`);
+        }
         throw new Error(errMsg);
       }
 
@@ -793,16 +796,16 @@ export default function RailwayGenerator() {
             ))}
           </div>
 
-          {/* SECTION 8: OPERATIONAL FLEET ROSTER (183 TRAINS) */}
+          {/* SECTION 8: OPERATIONAL FLEET ROSTER */}
           <div className="pt-7 border-t-2 border-neutral-700 space-y-4 font-mono">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-black text-white flex items-center gap-2">
                   <Train size={18} className="text-amber-400" />
-                  <span>OPERATIONAL FLEET ROSTER ({availableFleetTrains.length} / {fleetList.length} ACTIVE TRAINS)</span>
+                  <span>AUTHENTIC RECORDED FLEET ({availableFleetTrains.length} / {fleetList.length} VERIFIED TRAINS)</span>
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  Select any train across Indian Railways to auto-load route and broadcast parameters
+                  Every train in this roster has 100% authentic human voice announcements matching its exact train number and name
                 </p>
               </div>
 
