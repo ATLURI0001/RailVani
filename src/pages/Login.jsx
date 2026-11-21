@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { ShieldCheck, LogIn, AlertCircle, Loader2, Key, CheckCircle2, ArrowLeft } from "lucide-react";
+import { ShieldCheck, LogIn, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import Header from "../components/Header";
-import { useAuth, DEFAULT_ADMIN_CREDS } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const next = searchParams.get("next") || "/railway/add-train";
-  const { session, isAdmin, signInWithPassword, loginAsDemoAdmin, error: authError } = useAuth();
+  const { session, isAdmin, signInWithPassword, error: authError } = useAuth();
 
-  const [email, setEmail] = useState(DEFAULT_ADMIN_CREDS.email);
-  const [password, setPassword] = useState(DEFAULT_ADMIN_CREDS.password);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,20 +30,6 @@ export default function Login() {
       navigate(decodeURIComponent(next), { replace: true });
     } catch (err) {
       setError(err.message || "Failed to sign in. Please verify your admin credentials.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await signInWithPassword(DEFAULT_ADMIN_CREDS.email, DEFAULT_ADMIN_CREDS.password);
-      navigate(decodeURIComponent(next), { replace: true });
-    } catch (err) {
-      loginAsDemoAdmin();
-      navigate(decodeURIComponent(next), { replace: true });
     } finally {
       setLoading(false);
     }
@@ -77,24 +63,6 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Official Credentials Info Box */}
-            <div className="p-4 bg-black border-2 border-amber-500/50 rounded-2xl space-y-2 text-xs">
-              <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase text-[11px]">
-                <Key size={14} />
-                <span>OFFICIAL ADMIN CREDENTIALS</span>
-              </div>
-              <div className="space-y-1 text-neutral-300 font-mono text-[11px]">
-                <div>
-                  <span className="text-neutral-500">EMAIL: </span>
-                  <strong className="text-amber-300 font-bold">{DEFAULT_ADMIN_CREDS.email}</strong>
-                </div>
-                <div>
-                  <span className="text-neutral-500">PASSWORD: </span>
-                  <strong className="text-amber-300 font-bold">{DEFAULT_ADMIN_CREDS.password}</strong>
-                </div>
-              </div>
-            </div>
-
             {(error || authError) && (
               <div className="p-3.5 bg-red-950/90 border-2 border-red-600 text-red-200 rounded-xl text-xs flex items-start gap-2">
                 <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-400" />
@@ -113,7 +81,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="admin@railvani.in"
+                  placeholder="Enter administrator email"
                   className="w-full px-4 py-2.5 bg-black border-2 border-neutral-700 rounded-xl text-white text-xs font-bold focus:border-amber-400 focus:outline-none"
                 />
               </div>
@@ -128,7 +96,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="••••••••"
+                  placeholder="Enter administrator password"
                   className="w-full px-4 py-2.5 bg-black border-2 border-neutral-700 rounded-xl text-white text-xs font-bold focus:border-amber-400 focus:outline-none"
                 />
               </div>
@@ -152,20 +120,11 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="border-t-2 border-neutral-800 pt-4 text-center space-y-3">
-              <button
-                type="button"
-                onClick={handleQuickLogin}
-                className="w-full bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-2 border-amber-400/60 font-black py-2.5 px-4 rounded-xl text-xs uppercase transition shadow-md"
-              >
-                ⚡ 1-Click Instant Admin Sign In
-              </button>
-              <div>
-                <Link to="/" className="text-xs text-neutral-400 hover:text-amber-300 transition flex items-center justify-center gap-1">
-                  <ArrowLeft size={13} />
-                  <span>Return to Public Home</span>
-                </Link>
-              </div>
+            <div className="border-t-2 border-neutral-800 pt-4 text-center">
+              <Link to="/" className="text-xs text-neutral-400 hover:text-amber-300 transition flex items-center justify-center gap-1">
+                <ArrowLeft size={13} />
+                <span>Return to Public Home</span>
+              </Link>
             </div>
 
           </div>

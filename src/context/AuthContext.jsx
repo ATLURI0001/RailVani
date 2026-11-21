@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { BASE_URL, getAdminToken, setAdminToken } from "../utils/api";
 
 export const DEFAULT_ADMIN_CREDS = {
-  email: "admin@railvani.in",
-  password: "RailVani@Admin2026"
+  email: import.meta.env.VITE_ADMIN_EMAIL || "admin@railvani.in",
+  password: import.meta.env.VITE_ADMIN_PASSWORD || "RailVani@Admin2026"
 };
 
 const SESSION_KEY = "railvani_admin_session";

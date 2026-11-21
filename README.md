@@ -61,12 +61,14 @@ The output directory will be `dist/`.
 
 ---
 
-## 🔐 Admin Console Credentials
+## 🔐 Administrative Access
 
-To access the Fleet Database Editor (`/railway/add-train`) or Announcement Templates Editor (`/railway/templates`):
-- **Login URL:** `/login`
-- **Admin Email:** `admin@railvani.in`
-- **Admin Password:** `RailVani@Admin2026`
+Access to the Fleet Database Editor (`/railway/add-train`) and Announcement Templates Editor (`/railway/templates`) is restricted to authorized operators via the Admin Console (`/login`).
+Station administrator credentials can be configured securely using environment variables:
+- `VITE_ADMIN_EMAIL`
+- `VITE_ADMIN_PASSWORD`
+
+Unauthenticated visitors can freely browse, simulate, and generate announcements across all railway and metro lines.
 
 ---
 
