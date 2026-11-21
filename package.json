@@ -2,6 +2,21 @@
   "name": "railvani",
   "private": true,
   "version": "1.0.0",
+  "description": "Authentic Indian Railways & Metro station public address (PA) announcement simulator with pre-recorded human voice broadcasts, retro LED dot-matrix display, and live dispatch telemetry.",
+  "keywords": [
+    "indian-railways",
+    "railway-announcements",
+    "metro-announcements",
+    "vande-bharat",
+    "audio-simulator",
+    "soundboard",
+    "react",
+    "vite",
+    "tailwindcss",
+    "cloudflare-pages",
+    "transit",
+    "train-simulator"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
